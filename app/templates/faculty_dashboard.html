@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="faculty-page">
+<div class="top-bar">
+  <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light or dark theme">
+    <span class="theme-icon theme-sun" aria-hidden="true">☀️</span>
+    <span class="theme-icon theme-moon" aria-hidden="true">🌙</span>
+  </button>
+</div>
+<div class="sidebar">
+  <h2>{{ dashboard_name }}</h2>
+  <span class="brand-emoji">🏫</span>
+  <p class="sidebar-school">{{ school_name | default('Little Rainbow Academy') }}</p>
+</div>
+<div class="main">
+<h1>{{ greeting }}, {{ faculty_name }}</h1>
+<p class="climate-line">{{ climate }}</p>
+<p class="quote-line">{{ quote }}</p>
+<h3>{{ class_name }} - Section {{ section_name }}</h3>
+
+<div class="faculty-layout">
+<div class="tabs tabs-left">
+  <button class="tab-btn active" onclick="openTab(event, 'students-tab')">Students</button>
+  <button class="tab-btn" onclick="openTab(event, 'class-explorer-tab')">Class Explorer</button>
+  <button class="tab-btn" onclick="openTab(event, 'attendance-tab')">Weekly Attendance</button>
+  <button class="tab-btn" onclick="openTab(event, 'marks-tab')">Marks</button>
+  <button class="tab-btn" onclick="openTab(event, 'holidays-tab')">Holidays</button>
+  <button class="tab-btn" onclick="openTab(event, 'classes-tab')">Today's Classes</button>
+</div>
+
+<div class="tab-panel">
+<div id="students-tab" class="tab-content active">
+  <h3>Student list — edit &amp; save</h3>
+  <p class="hint-text">Update attendance or CGPA for any student, then click <strong>Save</strong>. Students are grouped by <strong>class &amp; section</strong> at registration.</p>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Roll No</th><th>Name</th><th>Class</th><th>Attendance %</th><th>CGPA</th><th>Edit</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr id="row-{{ student.roll_no }}">
+        <td>{{ student.roll_no }}</td>
+        <td>{{ student.name }}</td>
+        <td>{{ student.class_label }}</td>
+        <td>
+          <input id="attendance-{{ student.roll_no }}-{{ student.student_class }}-{{ student.section }}" value="{{ student.attendance }}" type="number" min="0" max="100" step="0.1">
+        </td>
+        <td>
+          <input id="cgpa-{{ student.roll_no }}-{{ student.student_class }}-{{ student.section }}" value="{{ student.cgpa }}" type="number" min="0" max="10" step="0.1">
+        </td>
+        <td>
+          <button onclick="savePerformance('{{ student.roll_no }}','{{ student.student_class }}','{{ student.section }}')">Save</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="class-explorer-tab" class="tab-content">
+  <h3>Classes 1 to 5 (Sections A & B)</h3>
+  <div class="class-explorer">
+    <div class="class-list-left">
+      {% for group in teaching_groups %}
+      <button class="class-btn {% if loop.first %}active{% endif %}" onclick="openClass(event, '{{ group }}')">{{ group }}</button>
+      {% endfor %}
+    </div>
+    <div class="class-info-right">
+      {% for group in teaching_groups %}
+      <div class="class-panel {% if loop.first %}active{% endif %}" data-group="{{ group }}">
+        <h4>{{ group }}</h4>
+        <p><strong>Avg Attendance:</strong> {{ class_groups[group].avg_attendance }}%</p>
+        <p><strong>Avg CGPA:</strong> {{ class_groups[group].avg_cgpa }}</p>
+        <table class="data-table">
+          <thead><tr><th>Roll No</th><th>Name</th><th>Attendance</th><th>CGPA</th></tr></thead>
+          <tbody>
+            {% for s in class_groups[group].students %}
+            <tr><td>{{ s.roll_no }}</td><td>{{ s.name }}</td><td>{{ s.attendance }}</td><td>{{ s.cgpa }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div id="attendance-tab" class="tab-content">
+  <h3>Weekly Attendance</h3>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Student</th><th>Mon</th><th>Tue</th><th>Wed</th><th>Thu</th><th>Fri</th><th>Sat</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr>
+        <td>{{ student.name }}</td>
+        <td>{{ student.weekly_attendance.Mon }}</td>
+        <td>{{ student.weekly_attendance.Tue }}</td>
+        <td>{{ student.weekly_attendance.Wed }}</td>
+        <td>{{ student.weekly_attendance.Thu }}</td>
+        <td>{{ student.weekly_attendance.Fri }}</td>
+        <td>{{ student.weekly_attendance.Sat }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="marks-tab" class="tab-content">
+  <h3>Subject Marks (FA1, FA2, SA1, SA2, Total)</h3>
+  {% for subject in subjects %}
+  <h4>{{ subject }}</h4>
+  <table class="data-table">
+    <thead>
+      <tr><th>Student</th><th>FA1</th><th>FA2</th><th>SA1</th><th>SA2</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for student in students %}
+      <tr>
+        <td>{{ student.name }}</td>
+        <td>{{ student.marks[subject].fa1 }}</td>
+        <td>{{ student.marks[subject].fa2 }}</td>
+        <td>{{ student.marks[subject].sa1 }}</td>
+        <td>{{ student.marks[subject].sa2 }}</td>
+        <td><strong>{{ student.marks[subject].total }}</strong></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+</div>
+
+<div id="holidays-tab" class="tab-content">
+  <h3>Holiday List</h3>
+  <table class="data-table">
+    <thead><tr><th>Date</th><th>Holiday</th></tr></thead>
+    <tbody>
+      {% for holiday in holidays %}
+      <tr><td>{{ holiday.date }}</td><td>{{ holiday.name }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div id="classes-tab" class="tab-content">
+  <h3>Classes to Teach on {{ weekday }}</h3>
+  {% if today_classes %}
+  <ul class="class-list">
+    {% for c in today_classes %}
+    <li>{{ c }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>No classes scheduled for today.</p>
+  {% endif %}
+</div>
+</div>
+</div>
+
+<script>
+function openTab(event, tabId) {
+  const tabs = document.querySelectorAll(".tab-content");
+  const buttons = document.querySelectorAll(".tab-btn");
+  tabs.forEach(tab => tab.classList.remove("active"));
+  buttons.forEach(btn => btn.classList.remove("active"));
+  document.getElementById(tabId).classList.add("active");
+  event.currentTarget.classList.add("active");
+}
+
+function openClass(event, className) {
+  const panels = document.querySelectorAll(".class-panel");
+  const buttons = document.querySelectorAll(".class-btn");
+  panels.forEach(p => p.classList.remove("active"));
+  buttons.forEach(b => b.classList.remove("active"));
+  const panel = document.querySelector(`.class-panel[data-group="${className}"]`);
+  if (panel) panel.classList.add("active");
+  event.currentTarget.classList.add("active");
+}
+
+async function savePerformance(rollNo, studentClass, section) {
+  const attendance = document.getElementById(`attendance-${rollNo}-${studentClass}-${section}`).value;
+  const cgpa = document.getElementById(`cgpa-${rollNo}-${studentClass}-${section}`).value;
+  const res = await fetch(`/faculty/students/${rollNo}/performance`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      attendance: Number(attendance),
+      cgpa: Number(cgpa),
+      student_class: String(studentClass),
+      section: String(section),
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    alert(data.detail || "Failed to update");
+    return;
+  }
+  alert("Updated successfully");
+}
+
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  syncThemeIcons();
+}
+function syncThemeIcons() {
+  const dark = document.body.classList.contains("dark");
+  document.querySelectorAll(".theme-sun").forEach(el => { el.style.opacity = dark ? "0.35" : "1"; });
+  document.querySelectorAll(".theme-moon").forEach(el => { el.style.opacity = dark ? "1" : "0.35"; });
+}
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+syncThemeIcons();
+</script>
+</div>
+</body>
+</html>

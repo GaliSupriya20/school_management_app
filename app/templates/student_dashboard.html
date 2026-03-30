@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ school_name | default('Little Rainbow Academy') }} — {{ student.name }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="student-page" data-roll="{{ student.roll_no }}">
+<div class="top-bar">
+  <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Light or dark view" aria-label="Toggle light or dark theme">
+    <span class="theme-icon theme-sun" aria-hidden="true">☀️</span>
+    <span class="theme-icon theme-moon" aria-hidden="true">🌙</span>
+  </button>
+</div>
+
+<div class="student-shell">
+  <aside class="student-nav">
+    <div class="student-brand">
+      <span class="brand-emoji">🏫</span>
+      <span class="brand-text">{{ school_name | default('Little Rainbow Academy') }}</span>
+    </div>
+    <button type="button" class="student-nav-btn active" onclick="openStudentPanel(event, 'panel-basic')">Basic details</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-timetable')">Timetable</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-marks')">Marks</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-attendance')">Attendance</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-fees')">Fees</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-profile')">Profile</button>
+    <button type="button" class="student-nav-btn" onclick="openStudentPanel(event, 'panel-notes')">Notes</button>
+  </aside>
+
+  <main class="student-main">
+    <section id="panel-basic" class="student-panel active">
+      <h2>Basic details</h2>
+      <p class="muted">View your school record. To change name or class, contact the office.</p>
+      <div class="info-grid">
+        <p><span class="label">Name</span> {{ student.name }}</p>
+        <p><span class="label">Roll no</span> {{ student.roll_no }}</p>
+        <p><span class="label">Class &amp; section</span> {{ student.class_label }}</p>
+        <p><span class="label">CGPA</span> {{ student.cgpa }}</p>
+        <p><span class="label">Attendance</span> {{ student.attendance }}%</p>
+      </div>
+    </section>
+
+    <section id="panel-timetable" class="student-panel">
+      <h2>Timetable</h2>
+      <p class="muted">Weekly schedule for {{ student.class_label }}.</p>
+      <table class="data-table">
+        <thead>
+          <tr><th>Day</th><th>Period 1</th><th>Period 2</th><th>Period 3</th><th>Period 4</th></tr>
+        </thead>
+        <tbody>
+          {% for row in student.timetable %}
+          <tr>
+            <td>{{ row.day }}</td>
+            <td>{{ row.p1 }}</td>
+            <td>{{ row.p2 }}</td>
+            <td>{{ row.p3 }}</td>
+            <td>{{ row.p4 }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
+
+    <section id="panel-marks" class="student-panel">
+      <h2>Marks details</h2>
+      {% for subject in student.subjects %}
+      <h4 class="marks-subject">{{ subject }}</h4>
+      <table class="data-table compact">
+        <thead>
+          <tr><th>FA1</th><th>FA2</th><th>SA1</th><th>SA2</th><th>Total</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>{{ student.marks[subject].fa1 }}</td>
+            <td>{{ student.marks[subject].fa2 }}</td>
+            <td>{{ student.marks[subject].sa1 }}</td>
+            <td>{{ student.marks[subject].sa2 }}</td>
+            <td><strong>{{ student.marks[subject].total }}</strong></td>
+          </tr>
+        </tbody>
+      </table>
+      {% endfor %}
+    </section>
+
+    <section id="panel-attendance" class="student-panel">
+      <h2>Attendance</h2>
+      <p class="attendance-big">{{ student.attendance }}<span class="pct">%</span></p>
+      <p class="muted">Overall attendance for the term (updated by your teachers).</p>
+    </section>
+
+    <section id="panel-fees" class="student-panel">
+      <h2>Fees details</h2>
+      <div class="fees-grid">
+        <div class="fees-card">
+          <span class="fees-label">Annual fee (info)</span>
+          <span class="fees-value">₹ {{ student.fees.annual_fee }}</span>
+        </div>
+        <div class="fees-card">
+          <span class="fees-label">This term</span>
+          <span class="fees-value">₹ {{ student.fees.term_fee }}</span>
+        </div>
+        <div class="fees-card highlight">
+          <span class="fees-label">Paid</span>
+          <span class="fees-value">₹ {{ student.fees.paid }}</span>
+        </div>
+        <div class="fees-card warn">
+          <span class="fees-label">Balance</span>
+          <span class="fees-value">₹ {{ student.fees.balance }}</span>
+        </div>
+      </div>
+      <p class="muted"><strong>Status:</strong> {{ student.fees.status }} · <strong>Due by:</strong> {{ student.fees.due_date }}</p>
+      <p class="muted small">Demo amounts for display. Office will share the official fee receipt.</p>
+    </section>
+
+    <section id="panel-profile" class="student-panel">
+      <h2>Profile</h2>
+      <p class="muted">Upload a photo (saved in this browser for now). Ask the school to enable server save later.</p>
+      <div class="profile-block">
+        <div class="profile-photo-wrap">
+          <img id="profile-preview" class="profile-photo" alt="Profile photo" src="" width="96" height="96" style="display:none;">
+          <div id="profile-fallback" class="avatar" aria-hidden="true">{{ student.initials }}</div>
+        </div>
+        <div class="profile-actions">
+          <p class="profile-name">{{ student.name }}</p>
+          <p class="muted">{{ student.class_label }} · Roll {{ student.roll_no }}</p>
+          <label class="upload-btn">
+            Choose photo
+            <input type="file" accept="image/*" id="profile-file" onchange="previewProfilePhoto(this)">
+          </label>
+          <button type="button" class="btn-secondary" onclick="clearProfilePhoto()">Remove photo</button>
+        </div>
+      </div>
+      <p class="muted small">Tip: open <strong>Basic details</strong> to see your official name and roll number.</p>
+    </section>
+
+    <section id="panel-notes" class="student-panel">
+      <h2>Notes for reference</h2>
+      <div class="notes-box">
+        {{ student.notes }}
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const roll = document.body.getAttribute("data-roll") || "guest";
+const storageKey = "student_profile_photo_" + roll;
+
+function openStudentPanel(evt, id) {
+  document.querySelectorAll(".student-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".student-nav-btn").forEach(b => b.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  evt.currentTarget.classList.add("active");
+}
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  syncThemeIcons();
+}
+function syncThemeIcons() {
+  const dark = document.body.classList.contains("dark");
+  document.querySelectorAll(".theme-sun").forEach(el => { el.style.opacity = dark ? "0.35" : "1"; });
+  document.querySelectorAll(".theme-moon").forEach(el => { el.style.opacity = dark ? "1" : "0.35"; });
+}
+function previewProfilePhoto(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const url = e.target.result;
+    localStorage.setItem(storageKey, url);
+    applyPhoto(url);
+  };
+  reader.readAsDataURL(file);
+}
+function applyPhoto(url) {
+  const img = document.getElementById("profile-preview");
+  const fb = document.getElementById("profile-fallback");
+  img.src = url;
+  img.style.display = "block";
+  fb.style.display = "none";
+}
+function clearProfilePhoto() {
+  localStorage.removeItem(storageKey);
+  document.getElementById("profile-preview").style.display = "none";
+  document.getElementById("profile-fallback").style.display = "flex";
+  document.getElementById("profile-file").value = "";
+}
+(function initPhoto() {
+  const saved = localStorage.getItem(storageKey);
+  if (saved) applyPhoto(saved);
+})();
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+syncThemeIcons();
+</script>
+</body>
+</html>

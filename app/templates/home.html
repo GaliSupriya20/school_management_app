@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>School Login — {{ school_name | default('Little Rainbow Academy') }}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="home-page">
+<div class="top-bar">
+  <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Light or dark view" aria-label="Toggle light or dark theme">
+    <span class="theme-icon theme-sun" aria-hidden="true">☀️</span>
+    <span class="theme-icon theme-moon" aria-hidden="true">🌙</span>
+  </button>
+</div>
+
+<div class="home-wrap">
+  <div class="school-banner">
+    <div class="school-banner-text">
+      <p class="school-badge">🏫 {{ school_name | default('Little Rainbow Academy') }}</p>
+      <h1 class="home-title">School Login Portal</h1>
+      <p class="home-sub">Learning, laughter &amp; friends — every day is a bright adventure!</p>
+    </div>
+    <div class="school-banner-art" aria-hidden="true">
+      <span class="art-emoji">🎒</span>
+      <span class="art-emoji">🚌</span>
+      <span class="art-emoji">⚽</span>
+      <span class="art-emoji">🎨</span>
+      <span class="art-emoji">📚</span>
+      <span class="art-emoji">🌈</span>
+    </div>
+  </div>
+
+  {% if error_message %}
+  <div class="message error">{{ error_message }}</div>
+  {% endif %}
+  {% if success_message %}
+  <div class="message success">{{ success_message }}</div>
+  {% endif %}
+
+  <div class="login-container">
+
+    <div class="card card-faculty">
+      <h3>Faculty Login</h3>
+      <form class="form-box" action="/faculty/login" method="post">
+        <input type="text" name="faculty_id" placeholder="Faculty ID" autocomplete="username"><br>
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password"><br>
+        <div class="action-row">
+          <button type="submit">Login</button>
+          <button type="button" class="link-btn" onclick="toggleRegister('faculty-register-form')">Register</button>
+        </div>
+      </form>
+
+      <form id="faculty-register-form" class="register-form form-box hidden" action="/faculty/register" method="post">
+        <input type="text" name="faculty_id" placeholder="New Faculty ID"><br>
+        <input type="text" name="name" placeholder="Full Name"><br>
+        <input type="password" name="password" placeholder="Create Password"><br>
+        <div class="action-row">
+          <button type="submit">Create ID</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="card card-student">
+      <h3>Student Login</h3>
+      <form class="form-box" action="/students/login" method="post">
+        <input type="text" name="roll_no" placeholder="Roll No" autocomplete="username"><br>
+        <label class="field-label">Class &amp; section</label>
+        <div class="inline-fields">
+          <select name="student_class">
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+          </select>
+          <select name="section">
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+          </select>
+        </div>
+        <input type="password" name="password" placeholder="Password" autocomplete="current-password"><br>
+        <div class="action-row">
+          <button type="submit">Login</button>
+          <button type="button" class="link-btn" onclick="toggleRegister('student-register-form')">Register</button>
+        </div>
+      </form>
+
+      <form id="student-register-form" class="register-form form-box hidden" action="/students/register" method="post">
+        <input type="text" name="roll_no" placeholder="New Roll No"><br>
+        <input type="text" name="name" placeholder="Full Name"><br>
+        <label class="field-label">Class &amp; section</label>
+        <div class="inline-fields">
+          <select name="student_class">
+            <option value="1">Class 1</option>
+            <option value="2">Class 2</option>
+            <option value="3">Class 3</option>
+            <option value="4">Class 4</option>
+            <option value="5">Class 5</option>
+          </select>
+          <select name="section">
+            <option value="A">Section A</option>
+            <option value="B">Section B</option>
+          </select>
+        </div>
+        <input type="password" name="password" placeholder="Create Password"><br>
+        <div class="action-row">
+          <button type="submit">Create ID</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleRegister(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  form.classList.toggle("hidden");
+}
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+  syncThemeIcons();
+}
+function syncThemeIcons() {
+  const dark = document.body.classList.contains("dark");
+  document.querySelectorAll(".theme-sun").forEach(el => { el.style.opacity = dark ? "0.35" : "1"; });
+  document.querySelectorAll(".theme-moon").forEach(el => { el.style.opacity = dark ? "1" : "0.35"; });
+}
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+}
+syncThemeIcons();
+</script>
+</body>
+</html>
